@@ -1,0 +1,28 @@
+{
+  "name": "veeb_kkkallip",
+  "version": "1.0.0",
+  "description": "Tarkvaraarendajate rühma veebiprogrameerimise kursuse veeb",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://kkkallip@github.com/kkkallip/veeb.git"
+  },
+  "keywords": [
+    "õppetöö",
+    "node.js",
+    "express.js",
+    "TLÜ"
+  ],
+  "author": "Karl K. Kallip",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kkkallip/veeb/issues"
+  },
+  "homepage": "https://github.com/kkkallip/veeb#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
