@@ -3,7 +3,8 @@ const dateEt = require("./src/dateTimeET");
 const fs = require("fs");
 const textRef = "public/txt/vanasonad.txt";
 const bodyParser = require("body-parser");
-
+const mysql = require("mysql2");
+const dbinfo = require("../../vp2025config");
 //Anna nimi app ja pane tööle
 const app = express();
 //määran veebilehtede renderdamise mootori
@@ -12,6 +13,14 @@ app.set("view engine", "ejs");
 app.use(express.static("public"));
 //parse request URL, flag flase if only txt, true if theres other data
 app.use(bodyParser.urlencoded({extended: false}));
+
+//loon andmebaasi ühenduse
+const conn = mysql.createConnection({
+    host: dbinfo.configData.host,
+    user: dbinfo.configData.user,
+    password: dbinfo.configData.passWord,
+    database: dbinfo.configData.dataBase
+});
 
 app.get("/", (req, res)=> {
     //res.send("Express.js käivitus ja serveerib veebi");
@@ -76,6 +85,43 @@ app.get("/visitlog", (req, res)=>{
 		}
 	});
 });
+app.get("/eestifilm", (req, res) => {
+    res.render("eestifilm");
+});
+
+app.get("/eestifilm/inimesed_add", (req, res) => {
+    res.render("filmiinimesed_add", {notice: "Ootan sisestust"});
+});
+
+app.post("/eestifilm/inimesed_add", (req, res) => {
+    console.log(req.body);
+    //kas andmed on olemas
+    if (!req.body.firstNameInput || !req.body.lastNameInput || !req.body.bornInput || req.body.bornInput >= new Date()) {
+        res.render("filmiinimesed_add", {notice: "Puudulikud või ebakorrektsed andmed!"});
+    } else {
+        let sqlReq = "INSERT INTO person (first_name, last_name, born, deceased) VALUES (?, ?, ?, ?)";
+        conn.execute(sqlReq, [req.body.firstNameInput, req.body.lastNameInput, req.body.bornInput, req.body.deceasedInput], (err, sqlres)=> {
+            if (err) {
+                res.render("filmiinimesed_add", {notice: "Andmete salvestamine ebaõnnestus!"});
+            } else {
+                res.render("filmiinimesed_add", {notice: "Andmed salvestatud"});
+            }
+        });
+    }
+});
+
+app.get("/eestifilm/inimesed", (req, res) => {
+    const sqlReq = "SELECT * FROM person";
+    conn.execute(sqlReq, (err, sqlres)=> {
+        if (err) {
+            throw(err);
+        } else {
+            res.render("filmiinimesed", {personList: sqlres});
+        }
+    });
+
+});
+
 
 
 app.listen(5118);
