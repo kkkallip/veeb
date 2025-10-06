@@ -37,23 +37,45 @@ app.get("/regvisit", (req, res)=> {
     //res.send("Express.js käivitus ja serveerib veebi");
     res.render("regvisit")
 });
-app.post("/regvisit", (req, res)=> {
-    console.log(req.body);
-    //Avan tekstifaili kirjutamiseks või loon kui seda pole (parameter 'a')
-    fs.open("public/txt/visitlog.txt", "a", (err, file)=> {
-        if (err) {
-            throw err;
-        } else {
-            //faili senisele sisule lisamine
-            fs.appendFile("public/txt/visitlog.txt", req.body.nameInput + ";", (err)=> {
-                if (err) {
-                    throw err;
-                } else {
-                    console.log("Saved");
-                }
-            });
-        }
-    });
+app.post("/regvisit", (req, res)=>{
+	console.log(req.body);
+	//avan tekstifaili kirjutamiseks sellisel moel, et kui teda pole, luuakse (parameeter "a")
+	fs.open("public/txt/visitlog.txt", "a", (err, file)=>{
+		if(err){
+			throw(err);
+		}
+		else {
+			//faili senisele sisule lisamine
+			fs.appendFile("public/txt/visitlog.txt", req.body.firstNameInput + " " + req.body.lastNameInput + ", " + dateEt.date() + " kell " + dateEt.fullTime() + ";", (err)=>{
+				if(err){
+					throw(err);
+				}
+				else {
+					console.log("Salvestatud!");
+					res.render("visitregistered", {visitor: req.body.firstNameInput + " " + req.body.lastNameInput});
+				}
+			});
+		}
+	});
 });
+
+app.get("/visitlog", (req, res)=>{
+	let listData = [];
+	fs.readFile("public/txt/visitlog.txt", "utf8", (err, data)=>{
+		if(err){
+			res.render("genericlist", {heading: "Registreeritud külastused", listData: ["Ei leidnud ühtegi külastust!"]});
+		}
+		else {
+			listData = data.split(";");
+            let correctListData = [];
+            for (let i = 0; i < listData.length - 1; i++) {
+                correctListData.push(listData[i]);
+                
+            }
+			res.render("genericlist", {heading: "Registreeritud külastused", listData: correctListData});
+		}
+	});
+});
+
 
 app.listen(5118);
