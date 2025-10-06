@@ -86,7 +86,32 @@ app.get("/visitlog", (req, res)=>{
 	});
 });
 app.get("/eestifilm", (req, res) => {
-    res.render("eestifilm");
+    const sqlReq = "SELECT * FROM movie";
+    conn.execute(sqlReq, (err, sqlres)=> {
+        if (err) {
+            throw(err);
+        } else {
+            res.render("eestifilm", {listData: sqlres, notice: "Ootan sisestust"});
+        }
+    });
+});
+
+app.post("/eestifilm", (req, res) => {
+    console.log(req.body);
+    //kas andmed on olemas
+    if (!req.body.titleInput || !req.body.productionYearInput || !req.body.durationInput) {
+        res.render("eestifilm", {notice: "Puudulikud või ebakorrektsed andmed!"});
+    } else {
+        let sqlReq = "INSERT INTO movie (title, production_year, duration, description) VALUES (?, ?, ?, ?)";
+        conn.execute(sqlReq, [req.body.titleInput, req.body.productionYearInput, req.body.durationInput, req.body.descriptionInput], (err, sqlres)=> {
+            if (err) {
+                console.log(err);
+                res.render("eestifilm", {listData: [], notice: "Andmete salvestamine ebaõnnestus!"});
+            } else {
+                res.render("eestifilm", {listData: sqlres, notice: "Andmed salvestatud"});
+            }
+        });
+    }
 });
 
 app.get("/eestifilm/inimesed_add", (req, res) => {
