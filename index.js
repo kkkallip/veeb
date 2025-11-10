@@ -7,16 +7,19 @@ const bodyParser = require("body-parser");
 const app = express();
 app.set("view engine", "ejs");
 app.use(express.static("public"));
-app.use(bodyParser.urlencoded({extended: false}));
+//Kui vormist ainult tekst -> false, muidu true
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.get("/", (req, res)=> {
     res.render("index")
 });
+
 app.get("/timenow", (req, res)=> {
     const weekDayNow = dateEt.weekDay();
     const dateNow = dateEt.date();
     res.render("timenow", {weekDayNow: weekDayNow, dateNow: dateNow});
 });
+
 app.get("/vanasonad", (req, res)=> {
     let folkWisdom = [];
     fs.readFile(textRef, "utf-8", (err, data)=> {
@@ -28,46 +31,12 @@ app.get("/vanasonad", (req, res)=> {
         }
     });
 });
-app.get("/regvisit", (req, res)=> {
-    res.render("regvisit")
-});
-app.post("/regvisit", (req, res)=>{
-	console.log(req.body);
-	fs.open("public/txt/visitlog.txt", "a", (err, file)=>{
-		if(err){
-			throw(err);
-		}
-		else {
-			fs.appendFile("public/txt/visitlog.txt", req.body.firstNameInput + " " + req.body.lastNameInput + ", " + dateEt.date() + " kell " + dateEt.fullTime() + ";", (err)=>{
-				if(err){
-					throw(err);
-				}
-				else {
-					console.log("Salvestatud!");
-					res.render("visitregistered", {visitor: req.body.firstNameInput + " " + req.body.lastNameInput});
-				}
-			});
-		}
-	});
-});
 
-app.get("/visitlog", (req, res)=>{
-	let listData = [];
-	fs.readFile("public/txt/visitlog.txt", "utf8", (err, data)=>{
-		if(err){
-			res.render("genericlist", {heading: "Registreeritud külastused", listData: ["Ei leidnud ühtegi külastust!"]});
-		}
-		else {
-			listData = data.split(";");
-            let correctListData = [];
-            for (let i = 0; i < listData.length - 1; i++) {
-                correctListData.push(listData[i]);
-                
-            }
-			res.render("genericlist", {heading: "Registreeritud külastused", listData: correctListData});
-		}
-	});
-});
+const photoUploadRouter = require("./routes/photoUploadRoutes");
+app.use("/galleryphotoupload", photoUploadRouter);
+
+const visitLogRouter = require("./routes/visitLogRoutes");
+app.use("/visitlog", visitLogRouter);
 
 //eestifilmi marsruudid
 const eestifilmRouter = require("./routes/eestifilmRoutes");
