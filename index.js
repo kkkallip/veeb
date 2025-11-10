@@ -59,6 +59,9 @@ app.get("/vanasonad", (req, res)=> {
     });
 });
 
+const galleryRouter = require("./routes/galleryRoutes");
+app.use("/photogallery", galleryRouter);
+
 const photoUploadRouter = require("./routes/photoUploadRoutes");
 app.use("/galleryphotoupload", photoUploadRouter);
 
