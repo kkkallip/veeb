@@ -72,4 +72,10 @@ app.use("/visitlog", visitLogRouter);
 const eestifilmRouter = require("./routes/eestifilmRoutes");
 app.use("/eestifilm", eestifilmRouter);
 
+const signupRouter = require("./routes/signupRoutes");
+app.use("/signup", signupRouter);
+
+//const newsRouter = require("./routes/newsRoutes");
+//app.use("/news", newsRouter);
+
 app.listen(5118);

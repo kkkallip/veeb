@@ -1,8 +1,8 @@
-window.onload = function() {
+window.onload = function(){
 	//kأ¤in lehe lأ¤bi ja teen listi kأµigist thumbs klassiga pisipiltidest
-	let allThumbs = document.querySelector(".gallery").querySelectorAll(".thumbs");
+	let allThumbs = document.querySelector("#gallery").querySelectorAll(".thumbs");
 	//mأ¤أ¤ran kأµigile funktsiooni, mis kأ¤ivitatakse hiireklikiga
-	for (let i = 0; i < allThumbs.length; i++){
+	for (let i = 0; i < allThumbs.length; i ++){
 		allThumbs[i].addEventListener("click", openModal);
 	}
 	document.querySelector("#modalClose").addEventListener("click", closeModal);

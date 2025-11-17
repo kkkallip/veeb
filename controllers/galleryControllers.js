@@ -13,13 +13,72 @@ const dbConf = {
 //@access public
 
 const galleryHome = async (req, res)=>{
+//	let conn;
+//	try {
+//		conn = await mysql.createConnection(dbConf);
+//		let sqlReq = "SELECT filename, alttext FROM galleryphotos_ta WHERE privacy >= ? AND deleted IS NULL";
+//		const privacy = 2;
+//		const [rows, fields] = await conn.execute(sqlReq, [privacy]);
+//		console.log(rows);
+//		let listData = [];
+//		for (let i = 0; i < rows.length; i ++){
+//			let altText = "Galeriipilt";
+//			if(rows[i].alttext != "") {
+//				altText = rows[i].alttext;
+//			}
+//			listData.push({src: rows[i].filename, alt: altText});
+//		}
+//		res.render("gallery", {listData: listData, imagehref: "gallery/thumbs/"});
+//	}
+//	catch(err){
+//		console.log(err);
+//		res.render("gallery", {listData: []});
+//	}
+//	finally {
+//	  if(conn){
+//	    await conn.end();
+//	  }
+//	}
+res.redirect("/photogallery/1");
+};
+
+const galleryPage = async (req, res)=>{
 	let conn;
+	const photoLimit = 5;
+	const privacy = 2;
+	let page = parseInt(req.params.page);
+	let skip = (page - 1) * photoLimit;
 	try {
+		if (page < 1 || isNaN(page)) {
+			page = 1;
+		}
+		//vaatame palju üldse fotosid on
+
 		conn = await mysql.createConnection(dbConf);
-		let sqlReq = "SELECT filename, alttext FROM galleryphotos_ta WHERE privacy >= ? AND deleted IS NULL";
-		const privacy = 2;
-		const [rows, fields] = await conn.execute(sqlReq, [privacy]);
-		console.log(rows);
+		let sqlReq = "SELECT COUNT(id) AS photos FROM galleryphotos_ta WHERE privacy >= ? AND DELETED IS NULL"
+		const [countResult] = await conn.execute(sqlReq, [privacy]);
+		const photoCount = countResult[0].photos;
+		//parandame leheküljenumbri, kui see on valitud liiga suur
+		if ((page - 1) * photoLimit >= photoCount) {
+			page = Math.max(1, Math.ceil(photoCount / photoLimit));
+		}
+		skip = (page - 1) * photoLimit;
+		//nav. linkide loomine
+		//eelmine leht
+		
+		if (page === 1) {
+			galleryLinks = "Eelmine leht &nbsp;&nbsp;&nbsp;| &nbsp;&nbsp;&nbsp;";
+		} else {
+			galleryLinks = `<a href="/photogallery/${page - 1}">Eelmine leht</a>&nbsp;&nbsp;&nbsp;| &nbsp;&nbsp;&nbsp;`; 
+		}
+		if (page * photoLimit >= photoCount) {
+			galleryLinks += "Järgmine leht";
+		} else {
+			galleryLinks += `<a href="/photogallery/${page + 1}">Järgmine leht</a>`
+		}
+
+		sqlReq = "SELECT filename, alttext FROM galleryphotos_ta WHERE privacy >= ? AND deleted IS NULL LIMIT ?, ?";
+		const [rows, fields] = await conn.execute(sqlReq, [privacy, skip, photoLimit]);
 		let listData = [];
 		for (let i = 0; i < rows.length; i ++){
 			let altText = "Galeriipilt";
@@ -28,11 +87,11 @@ const galleryHome = async (req, res)=>{
 			}
 			listData.push({src: rows[i].filename, alt: altText});
 		}
-		res.render("gallery", {listData: listData, imagehref: "gallery/thumbs/"});
+		res.render("gallery", {listData: listData, imagehref: "/gallery/thumbs/", links: galleryLinks});
 	}
 	catch(err){
 		console.log(err);
-		res.render("gallery", {listData: []});
+		res.render("gallery", {listData: [], imagehref: "/gallery/thumbs/", links: ""});
 	}
 	finally {
 	  if(conn){
@@ -42,5 +101,5 @@ const galleryHome = async (req, res)=>{
 };
 
 module.exports = {
-	galleryHome
+	galleryHome, galleryPage
 };
