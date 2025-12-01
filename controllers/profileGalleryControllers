@@ -1,16 +1,13 @@
 const mysql = require("mysql2/promise");
 const pool = require("../src/dbPool");
 
-//@desc home page for photogallery
-//@route GET /photogallery
-//@access public
-const galleryHome = async (req, res)=> {
-res.redirect("/photogallery/1");
+const profileHome = async (req, res)=> {
+res.redirect("/profile/1");
 };
 
-const galleryPage = async (req, res)=>{
+const profilePage = async (req, res)=>{
 	const photoLimit = 5;
-	const privacy = 2;
+	const userId = req.session.userId;
 	let page = parseInt(req.params.page);
 	let skip = (page - 1) * photoLimit;
 	try {
@@ -18,8 +15,8 @@ const galleryPage = async (req, res)=>{
 			page = 1;
 		}
 		//vaatame palju üldse fotosid on
-		let sqlReq = "SELECT COUNT(id) AS photos FROM galleryphotos_ta WHERE privacy >= ? AND DELETED IS NULL"
-		const [countResult] = await pool.execute(sqlReq, [privacy]);
+		let sqlReq = "SELECT COUNT(id) AS photos FROM galleryphotos_ta WHERE userid = ? AND DELETED IS NULL"
+		const [countResult] = await pool.execute(sqlReq, [userId]);
 		const photoCount = countResult[0].photos;
 		//parandame leheküljenumbri, kui see on valitud liiga suur
 		if ((page - 1) * photoLimit >= photoCount) {
@@ -32,16 +29,16 @@ const galleryPage = async (req, res)=>{
 		if (page === 1) {
 			galleryLinks = "Eelmine leht &nbsp;&nbsp;&nbsp;| &nbsp;&nbsp;&nbsp;";
 		} else {
-			galleryLinks = `<a href="/photogallery/${page - 1}">Eelmine leht</a>&nbsp;&nbsp;&nbsp;| &nbsp;&nbsp;&nbsp;`; 
+			galleryLinks = `<a href="/profile/${page - 1}">Eelmine leht</a>&nbsp;&nbsp;&nbsp;| &nbsp;&nbsp;&nbsp;`; 
 		}
 		if (page * photoLimit >= photoCount) {
 			galleryLinks += "Järgmine leht";
 		} else {
-			galleryLinks += `<a href="/photogallery/${page + 1}">Järgmine leht</a>`
+			galleryLinks += `<a href="/profile/${page + 1}">Järgmine leht</a>`
 		}
 
-		sqlReq = "SELECT filename, alttext FROM galleryphotos_ta WHERE privacy >= ? AND deleted IS NULL LIMIT ?, ?";
-		const [rows, fields] = await pool.execute(sqlReq, [privacy, skip, photoLimit]);
+		sqlReq = "SELECT filename, alttext FROM galleryphotos_ta WHERE userid = ? AND deleted IS NULL LIMIT ?, ?";
+		const [rows, fields] = await pool.execute(sqlReq, [userId, skip, photoLimit]);
 		let listData = [];
 		for (let i = 0; i < rows.length; i ++){
 			let altText = "Galeriipilt";
@@ -59,5 +56,5 @@ const galleryPage = async (req, res)=>{
 };
 
 module.exports = {
-	galleryHome, galleryPage
+	profileHome, profilePage
 };

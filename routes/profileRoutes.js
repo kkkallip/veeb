@@ -6,11 +6,11 @@ router.use(loginCheck.isLogin);
 
 //kontrollerid
 const {
-    galleryHome,
-    galleryPage
-} = require("../controllers/galleryControllers");
+    profilePage,
+    profileHome
+} = require("../controllers/profileGalleryControllers");
 
-router.route("/").get(galleryHome);
-router.route("/:page").get(galleryPage); //peab olema viimane
+router.route("/").get(profilePage);
+router.route("/:page").get(profileHome); //peab olema viimane
 
 module.exports = router;

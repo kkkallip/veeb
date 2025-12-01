@@ -1,44 +1,49 @@
 const express = require("express");
+require("dotenv").config();
+const pool = require("./src/dbPool");
 const dateEt = require("./src/dateTimeET");
+const loginCheck = require("./src/checkLogin");
 const fs = require("fs");
 const textRef = "public/txt/vanasonad.txt";
 const bodyParser = require("body-parser");
 const dbinfo = require("../../vp2025config");
-const mysql = require("mysql2/promise");
+const session = require("express-session");
 
 const app = express();
+//app.use(session({secret: dbinfo.configData.sessionSecret, saveUninitialized: true, resave: true}));
+app.use(session({secret: process.env.SES_SECRET, saveUninitialized: true, resave: true}));
 app.set("view engine", "ejs");
 app.use(express.static("public"));
+
 //Kui vormist ainult tekst -> false, muidu true
 app.use(bodyParser.urlencoded({extended: true}));
 
-const dbConf = {
-    host: dbinfo.configData.host,
-    user: dbinfo.configData.user,
-    password: dbinfo.configData.passWord,
-    database: dbinfo.configData.dataBase
-}
-
 app.get("/", async (req, res)=> {
-    let conn;
+    //let conn;
     try {
-        conn = await mysql.createConnection(dbConf);
+        //conn = await mysql.createConnection(dbConf);
         let sqlReq = "SELECT filename, alttext FROM galleryphotos_ta WHERE id=(SELECT MAX(id) FROM galleryphotos_ta WHERE privacy=? AND deleted IS NULL)";
 		const privacy = 3;
-		const [rows, fields] = await conn.execute(sqlReq, [privacy]);
+		//const [rows, fields] = await conn.execute(sqlReq, [privacy]);
+        const [rows, fields] = await pool.execute(sqlReq, [privacy]);
 		let imgAlt = "Avalik foto";
-		if(rows[0].alttext != ""){
-			imgAlt = rows[0].alttext;
+		if(rows[0].alttext != "") {
+			imgAlt = rows[0].alttext; 
 		}
 		res.render("index", {imgFile: "gallery/normal/" + rows[0].filename, imgAlt: imgAlt});
     } catch (error) {
         console.log(error);
         res.render("index", {imgFile: "", imgAlt: "Pilt puudub"});
-    } finally {
-        if(conn) {
-			await conn.end();
-		}
     }
+});
+
+app.get("/home", loginCheck.isLogin, (req, res) => {
+    res.render("home", {user: req.session.firstName + " " + req.session.lastName});
+});
+
+app.get("/logout", (req, res) => {
+    req.session.destroy();
+    res.redirect("/");
 });
 
 app.get("/timenow", (req, res)=> {
@@ -59,6 +64,9 @@ app.get("/vanasonad", (req, res)=> {
     });
 });
 
+const profileRouter = require("./routes/profileRoutes");
+app.use("/profile", profileRouter);
+
 const galleryRouter = require("./routes/galleryRoutes");
 app.use("/photogallery", galleryRouter);
 
@@ -68,12 +76,14 @@ app.use("/galleryphotoupload", photoUploadRouter);
 const visitLogRouter = require("./routes/visitLogRoutes");
 app.use("/visitlog", visitLogRouter);
 
-//eestifilmi marsruudid
 const eestifilmRouter = require("./routes/eestifilmRoutes");
 app.use("/eestifilm", eestifilmRouter);
 
 const signupRouter = require("./routes/signupRoutes");
 app.use("/signup", signupRouter);
+
+const signinRouter = require("./routes/signinRoutes");
+app.use("/signin", signinRouter);
 
 //const newsRouter = require("./routes/newsRoutes");
 //app.use("/news", newsRouter);
